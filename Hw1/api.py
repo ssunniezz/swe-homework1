@@ -14,26 +14,18 @@ API for listing stocks on every vending machine
 
 @api_blueprint.route('/api/stocks', methods=['GET'])
 def stock_list():
-    sql = 'SELECT * FROM product'
-    sql1 = 'SHOW COLUMNS FROM vending_machine.product'
-
-    db = app.db
-    stocks = db.engine.execute(sql)
-    cols = db.engine.execute(sql1).all()
-
     lst = []
 
-    for s in stocks:
-        obj = OrderedDict()
-        for i in range(len(cols)):
-            if cols[i][0] == 'vending_id':
-                vending = table.Vending.query.filter_by(id=s[i]).first()
-                obj["vending"] = vending.json()
-            else:
-                obj[cols[i][0]] = s[i]
-        lst.append(obj)
+    vendings = table.Vending.query.all()
+    for vending in vendings:
+        d = vending.json()
 
-    print(lst)
+        stocks = sorted(table.Stock.query.filter_by(vending_id=vending.id).all(), key=lambda s: s.name)
+        stock = {s.name: s.amount for s in stocks}
+
+        d['stock'] = stock
+        lst.append(d)
+
     return jsonify(lst)
 
 
@@ -54,11 +46,8 @@ def add_vending():
     for d in data:
         setattr(new_vending, d, data[d])
 
-    products = table.Product(vending=new_vending)
-
     db = app.db
     db.session.add(new_vending)
-    db.session.add(products)
     db.session.commit()
 
     return {'success': True}
@@ -112,23 +101,66 @@ def edit_vending():
 
 
 '''
-API for adding product, product name was received through form-data
+API for adding stock, data were received through form-data
 '''
 
 
-@api_blueprint.route('/api/addProduct', methods=['POST'])
-def add_product():
-    name = request.form.get('name')
+@api_blueprint.route('/api/addStock', methods=['POST'])
+def add_stock():
+    vending_id = request.form.get('vending_id')
+    name = request.form.get('name').lower()
+    amount = request.form.get('amount')
 
-    if not name:
-        return {'success': False}
-
-    sql = f'ALTER TABLE product ADD COLUMN {name} int DEFAULT (0)'
+    product = table.Stock(vending_id=vending_id, name=name, amount=amount)
 
     db = app.db
-    db.engine.execute(sql)
-    setattr(table.Product, name, 0)
-    print(getattr(table.Product, name))
+    db.session.add(product)
+    db.session.commit()
 
     return {'success': True}
 
+
+'''
+API for deleting stock, vending and product name were received through form-data
+'''
+
+
+@api_blueprint.route('/api/deleteStock', methods=['POST'])
+def delete_stock():
+    vending_id = request.form.get('vending_id')
+    name = request.form.get('name').lower()
+
+    to_delete = table.Stock.query.filter_by(vending_id=vending_id, name=name).first()
+
+    if not to_delete:
+        return {'success': False}
+
+    db = app.db
+    db.session.delete(to_delete)
+    db.session.commit()
+
+    return {'success': True}
+
+
+'''
+API for editing stock, data were received through form-data
+'''
+
+
+@api_blueprint.route('/api/editStock', methods=['POST'])
+def edit_stock():
+    vending_id = request.form.get('vending_id')
+    name = request.form.get('name').lower()
+    amount = request.form.get('amount')
+
+    to_edit = table.Stock.query.filter_by(vending_id=vending_id, name=name).first()
+
+    if not to_edit:
+        return {'success': False}
+
+    to_edit.amount = amount
+
+    db = app.db
+    db.session.commit()
+
+    return {'success': True}

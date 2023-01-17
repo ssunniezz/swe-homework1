@@ -12,13 +12,15 @@ class Vending(db.Model):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class Product(db.Model):
+class Stock(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint('name', 'vending_id', name='uid'),
+    )
     id = db.Column(db.Integer, primary_key=True)
-    vending_id = db.Column(db.Integer, db.ForeignKey('vending.id'), unique=True)
-    vending = db.relationship('Vending', backref=backref('product', cascade='all,delete'))
-    coke = db.Column(db.Integer, default=0)
-    taro = db.Column(db.Integer, default=0)
-    lays = db.Column(db.Integer, default=0)
+    vending_id = db.Column(db.Integer, db.ForeignKey('vending.id'), nullable=False)
+    vending = db.relationship('Vending', backref=backref('stock', cascade='all,delete'))
+    name = db.Column(db.String(50), nullable=False)
+    amount = db.Column(db.Integer, default=0)
 
     def json(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
