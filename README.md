@@ -1,3 +1,10 @@
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ssunniezz_swe-vending-machine-with-ci&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ssunniezz_swe-vending-machine-with-ci)
+
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=ssunniezz_swe-vending-machine-with-ci&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=ssunniezz_swe-vending-machine-with-ci)
+
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ssunniezz_swe-vending-machine-with-ci&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=ssunniezz_swe-vending-machine-with-ci)
+
+
 ## Setup Instruction
 ```
 poetry install
