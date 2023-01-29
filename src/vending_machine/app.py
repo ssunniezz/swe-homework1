@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 
 from vending_machine import api
 from vending_machine.db import db
@@ -15,6 +16,9 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.register_blueprint(api.api_blueprint)
 
+    csrf = CSRFProtect()
+    csrf.init_app(app)
+
     load_dotenv()
     user = os.getenv("DB_USER")
     password = os.getenv("DB_PASS")
@@ -23,7 +27,6 @@ def create_app() -> Flask:
 
     app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{user}:{password}@{host}:{port}/vending_machine"
     app.config["JSON_SORT_KEYS"] = False
-    app.config["WTF_CSRF_ENABLED"] = False  # Sensitive
 
     db.init_app(app)
 
