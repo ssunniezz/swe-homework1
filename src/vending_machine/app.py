@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask
 
 from vending_machine import api
@@ -11,7 +14,14 @@ def create_app() -> Flask:
     """
     app = Flask(__name__)
     app.register_blueprint(api.api_blueprint)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "mariadb+mariadbconnector://sun:sun@127.0.0.1:3306/vending_machine"
+
+    load_dotenv()
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASS")
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{user}:{password}@{host}:{port}/vending_machine"
     app.config["JSON_SORT_KEYS"] = False
 
     db.init_app(app)
