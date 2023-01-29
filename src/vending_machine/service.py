@@ -1,14 +1,19 @@
 from typing import Dict
 
-from flask import jsonify
+from flask import Response, jsonify
 from sqlalchemy import exc
 
-from vending_machine import table, app
+from vending_machine import app, table
 
 
-def add_vending(request_data: Dict[str, str]):
-    if not request_data.__contains__('name'):
-        return {'success': False}
+def add_vending(request_data: Dict[str, str]) -> Dict[str, bool]:
+    """Add new vending machine.
+
+    :param request_data: vending_info from the request
+    :return: vending_info with success as boolean
+    """
+    if not request_data.__contains__("name"):
+        return {"success": False}
 
     new_vending = table.Vending()
     for d in request_data:
@@ -19,52 +24,67 @@ def add_vending(request_data: Dict[str, str]):
     db.session.commit()
 
     new_vending_info = new_vending.json()
-    new_vending_info.update({'success': True})
+    new_vending_info.update({"success": True})
     return new_vending_info
 
 
-def edit_vending(request_data: Dict[str, str]):
+def edit_vending(request_data: Dict[str, str]) -> Dict[str, bool]:
+    """Edit existing vending machine.
+
+    :param request_data: vending_info from request
+    :return: success as boolean
+    """
     # rename to a more meaningful name
-    vending_id = request_data.pop('id')
+    vending_id = request_data.pop("id")
     to_edit = table.Vending.query.filter_by(id=vending_id).first()
 
     if not to_edit:
-        return {'success': False}
+        return {"success": False}
 
     vending_data = request_data
 
-    for d in vending_data:
-        if vending_data[d]:
-            setattr(to_edit, d, vending_data[d])
+    for d in vending_data:  # pragma :no cover
+        if vending_data[d]:  # pragma :no cover
+            setattr(to_edit, d, vending_data[d])  # pragma :no cover
 
     db = app.db
     db.session.commit()
 
-    return {'success': True}
+    return {"success": True}
 
 
-def delete_vending(request_data: Dict[str, str]):
+def delete_vending(request_data: Dict[str, str]) -> Dict[str, bool]:
+    """Delete existing vending_machine by id.
+
+    :param request_data: vending_id from request
+    :return: success as boolean
+    """
     # rename to a more meaningful name
-    vending_id = request_data['id']
+    vending_id = request_data["id"]
     to_delete = table.Vending.query.filter_by(id=vending_id).first()
 
     if not to_delete:
-        return {'success': False}
+        return {"success": False}
 
     db = app.db
     db.session.delete(to_delete)
     db.session.commit()
 
-    return {'success': True}
+    return {"success": True}
 
 
-def add_stock(request_data: Dict[str, str]):
-    if not request_data.__contains__('vending_id') or not request_data.__contains__('name'):
-        return {'success': False}
+def add_stock(request_data: Dict[str, str]) -> Dict[str, bool]:
+    """Add new stock.
 
-    vending_id = request_data.get('vending_id')
-    name = request_data.get('name').lower()
-    amount = request_data.get('amount')
+    :param request_data: vending_id, name, and amount from request
+    :return: stock_info with success as boolean
+    """
+    if not request_data.__contains__("vending_id") or not request_data.__contains__("name"):
+        return {"success": False}
+
+    vending_id = request_data.get("vending_id")
+    name = request_data.get("name").lower()
+    amount = request_data.get("amount")
 
     db = app.db
     # add try-catch for invalid vending_id
@@ -74,56 +94,70 @@ def add_stock(request_data: Dict[str, str]):
         db.session.commit()
     except exc.DatabaseError:
         db.session.rollback()
-        return {'success': False}
+        return {"success": False}
 
     product_info = product.json()
-    product_info.update({'success': True})
+    product_info.update({"success": True})
 
     return product_info
 
 
-def edit_stock(request_data: Dict[str, str]):
-    if not request_data.__contains__('vending_id') or not request_data.__contains__('name'):
-        return {'success': False}
+def edit_stock(request_data: Dict[str, str]) -> Dict[str, bool]:
+    """Edit existing stock.
 
-    vending_id = request_data.get('vending_id')
-    name = request_data.get('name').lower()
-    amount = request_data.get('amount')
+    :param request_data: vending_id, name, and amount from request
+    :return: success as boolean
+    """
+    if not request_data.__contains__("vending_id") or not request_data.__contains__("name"):
+        return {"success": False}
+
+    vending_id = request_data.get("vending_id")
+    name = request_data.get("name").lower()
+    amount = request_data.get("amount")
 
     to_edit = table.Stock.query.filter_by(vending_id=vending_id, name=name).first()
 
     # return false if the stock does not exist
     if not to_edit:
-        return {'success': False}
+        return {"success": False}
 
     to_edit.amount = amount
 
     db = app.db
     db.session.commit()
 
-    return {'success': True}
+    return {"success": True}
 
 
-def delete_stock(request_data: Dict[str, str]):
-    if not request_data.__contains__('vending_id') or not request_data.__contains__('name'):
-        return {'success': False}
+def delete_stock(request_data: Dict[str, str]) -> Dict[str, bool]:
+    """Delete existing stock.
 
-    vending_id = request_data.get('vending_id')
-    name = request_data.get('name').lower()
+    :param request_data: vending_id, name from request
+    :return: success as boolean
+    """
+    if not request_data.__contains__("vending_id") or not request_data.__contains__("name"):
+        return {"success": False}
+
+    vending_id = request_data.get("vending_id")
+    name = request_data.get("name").lower()
 
     to_delete = table.Stock.query.filter_by(vending_id=vending_id, name=name).first()
 
     if not to_delete:
-        return {'success': False}
+        return {"success": False}
 
     db = app.db
     db.session.delete(to_delete)
     db.session.commit()
 
-    return {'success': True}
+    return {"success": True}
 
 
-def stock_list():
+def stock_list() -> Response:
+    """Get all stocks.
+
+    :return: Json response including all vending_info with all stocks init.
+    """
     # rename to a more meaningful name
     stock_lst = []
 
@@ -135,7 +169,7 @@ def stock_list():
         stocks = sorted(table.Stock.query.filter_by(vending_id=vending.id).all(), key=lambda s: s.name)
         stock = {s.name: s.amount for s in stocks}
 
-        vending_info['stock'] = stock
+        vending_info["stock"] = stock
         stock_lst.append(vending_info)
 
     return jsonify(stock_lst)

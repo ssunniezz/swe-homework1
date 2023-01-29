@@ -1,79 +1,62 @@
-from vending_machine.app import app
-from vending_machine.service import add_vending, edit_vending, delete_vending
+from flask.testing import FlaskClient
 
 vending_info = {}
 
 
-def test_add_vending():
-    data = {
-        "name": "one",
-        "location": "mahidol university"
-    }
+def test_add_vending(client: FlaskClient):
+    data = {"name": "one", "location": "mahidol university"}
 
-    with app.app_context():
-        r = add_vending(data)
+    r = client.post("/api/addVending", data=data).json
 
     global vending_info
     vending_info = r
 
-    assert r['success']
+    assert r["success"]
 
 
-def test_add_vending_invalid():
-    data = {
-        "location": "mahidol university"
-    }
+def test_add_vending_invalid(client: FlaskClient):
+    data = {"location": "mahidol university"}
 
-    with app.app_context():
-        r = add_vending(data)
-    assert not r['success']
+    r = client.post("/api/addVending", data=data).json
+
+    assert not r["success"]
 
 
-def test_edit_vending():
+def test_edit_vending(client: FlaskClient):
+    global vending_info
+    data = {"id": vending_info["id"], "name": "two", "location": "thammasat university"}
+
+    r = client.post("/api/editVending", data=data).json
+
+    assert r["success"]
+
+
+def test_edit_vending_invalid(client: FlaskClient):
+    global vending_info
+    data = {"id": -1, "name": "two", "location": "thammasat university"}
+
+    r = client.post("/api/editVending", data=data).json
+
+    assert not r["success"]
+
+
+def test_delete_vending(client: FlaskClient):
     global vending_info
     data = {
-        "id": vending_info['id'],
-        "name": "two",
-        "location": "thammasat university"
+        "id": vending_info["id"],
     }
 
-    with app.app_context():
-        r = edit_vending(data)
-    assert r['success']
+    r = client.post("/api/deleteVending", data=data).json
+
+    assert r["success"]
 
 
-def test_edit_vending_invalid():
+def test_delete_vending_invalid(client: FlaskClient):
     global vending_info
     data = {
-        "id": -1,
-        "name": "two",
-        "location": "thammasat university"
-    }
-    with app.app_context():
-        r = edit_vending(data)
-
-    assert not r['success']
-
-
-def test_delete_vending():
-    global vending_info
-    data = {
-        "id": vending_info['id'],
+        "id": "-1",
     }
 
-    with app.app_context():
-        r = delete_vending(data)
+    r = client.post("/api/deleteVending", data=data).json
 
-    assert r['success']
-
-
-def test_delete_vending_invalid():
-    global vending_info
-    data = {
-        "id": '-1',
-    }
-
-    with app.app_context():
-        r = delete_vending(data)
-
-    assert not r['success']
+    assert not r["success"]
