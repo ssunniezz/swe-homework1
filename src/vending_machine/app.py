@@ -23,6 +23,7 @@ def create_app() -> Flask:
 
     app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{user}:{password}@{host}:{port}/vending_machine"
     app.config["JSON_SORT_KEYS"] = False
+    app.config["WTF_CSRF_ENABLED"] = False  # Sensitive
 
     db.init_app(app)
 
