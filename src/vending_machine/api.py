@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Set
 
 from flask import Blueprint, Response, request
 
@@ -10,6 +10,8 @@ from vending_machine.service import (
     edit_stock,
     edit_vending,
     stock_list,
+    stock_timeline_by_product,
+    stock_timeline_by_vending,
 )
 
 api_blueprint = Blueprint("api", __name__)
@@ -110,3 +112,21 @@ def call_edit_stock() -> Dict[str, bool]:
     :return: success as boolean
     """
     return edit_stock(dict(request.form))
+
+
+@api_blueprint.route("/api/stockTimelineByProduct", methods=["POST"])
+def call_stock_timeline_by_product() -> Dict[str, Dict[str, str]]:
+    """Call stock_timeline_by_product.
+
+    :return: total amount of the product in each vending machine
+    """
+    return stock_timeline_by_product(dict(request.form))
+
+
+@api_blueprint.route("/api/stockTimelineByVending", methods=["POST"])
+def call_stock_timeline_by_vending() -> Dict[str, Set[str]]:
+    """Call stock_timeline_by_vending.
+
+    :return: products in current vending machine at each time
+    """
+    return stock_timeline_by_vending(dict(request.form))

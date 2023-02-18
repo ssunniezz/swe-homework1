@@ -1,5 +1,6 @@
 from typing import Dict
 
+from sqlalchemy import func
 from sqlalchemy.orm import backref
 
 from vending_machine.db import db
@@ -47,3 +48,22 @@ class Stock(db.Model):
         :return: stock_info as a dictionary
         """
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class StockTimeline(db.Model):
+    """Stock timeline(logs).
+
+    id: Primary key
+    time: timestamp for each stock transaction
+    vending_id: Foreign key with Vending.id
+    product: Product name
+    amount: Amount of product
+    """
+
+    __table_args__ = (db.UniqueConstraint("product", "vending_id", "time", name="tid"),)
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.DateTime(), default=func.now())
+    vending_id = db.Column(db.Integer, db.ForeignKey("vending.id"), nullable=False)
+    vending = db.relationship("Vending", backref=backref("stock_timeline", cascade="all,delete"))
+    product = db.Column(db.String(50), nullable=False)
+    amount = db.Column(db.Integer, default=0)

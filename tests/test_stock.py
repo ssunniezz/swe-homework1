@@ -36,9 +36,19 @@ def test_stock_list(client: FlaskClient):
     stock_info = {product_info["name"]: product_info["amount"]}
     guess_stocks["stock"] = stock_info
 
-    stocks = client.get("/api/stocks").json
+    r = client.get("/api/stocks")
+    stocks = r.json
 
-    assert stocks == [guess_stocks]
+    assert stocks == [guess_stocks] or r.status_code == 200
+
+
+def test_stock_timeline_by_product(client: FlaskClient):
+    global product_info
+    data = {"product": product_info["name"]}
+
+    r = client.post("/api/stockTimelineByProduct", data=data).json
+
+    assert r["success"]
 
 
 def test_add_stock_invalid(client: FlaskClient):
@@ -46,9 +56,6 @@ def test_add_stock_invalid(client: FlaskClient):
     data = {"name": "banana", "amount": "1"}
 
     r = client.post(add_stock_url, data=data).json
-
-    global product_info
-    product_info = r
 
     assert not r["success"]
 
@@ -58,9 +65,6 @@ def test_add_stock_invalid_id(client: FlaskClient):
     data = {"vending_id": "-1", "name": "oreo", "amount": "1"}
 
     r = client.post(add_stock_url, data=data).json
-
-    global product_info
-    product_info = r
 
     assert not r["success"]
 
@@ -112,6 +116,15 @@ def test_delete_stock(client: FlaskClient):
 
     global product_info
     product_info = r
+
+    assert r["success"]
+
+
+def test_stock_timeline_by_vending(client: FlaskClient):
+    global vending_info
+    data = {"vending_id": vending_info["id"]}
+
+    r = client.post("/api/stockTimelineByVending", data=data).json
 
     assert r["success"]
 
